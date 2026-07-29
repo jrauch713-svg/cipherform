@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routes import auth
+from app.routes import auth, forms
 
 app = FastAPI(
     title="CipherForm API",
@@ -23,6 +23,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth.router)
+app.include_router(forms.router)
 
 
 @app.get("/api/health")
