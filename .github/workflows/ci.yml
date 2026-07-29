@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cipherform
+          POSTGRES_PASSWORD: cipherform
+          POSTGRES_DB: cipherform_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://cipherform:cipherform@localhost:5432/cipherform_test
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: test-secret
+      APP_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: |
+          cd backend
+          ruff check .
+
+      - name: Type check (mypy)
+        run: |
+          cd backend
+          mypy app/ --ignore-missing-imports
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Lint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Type check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test -- --coverage
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml

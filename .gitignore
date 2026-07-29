@@ -1,0 +1,35 @@
+# Backend
+__pycache__/
+*.pyc
+.venv/
+.env
+*.egg-info/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend
+node_modules/
+dist/
+.cache/
+
+# Docker
+.postgres-data/
+.redis-data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+*.p12
+credentials.json
